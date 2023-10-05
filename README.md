@@ -20,7 +20,7 @@ Role will install freeipmi (core dependency for ipmi-exporter) and sudoers (if e
 | ipmi_exporter_group              | `{{ ipmi_exporter_user }}` | system group for exporter               |
 | ipmi_exporter_web_listen_address | `:9290`                    | listen port                             |
 | ipmi_exporter_use_sudoers        | `false`                    | installs sudoers file for ipmi_exporter |
-| ipmi_exporter_cli_flags          | `false`                    | additional arguments for ipmi_exporter  |
+| ipmi_exporter_cli_flags          | `{}`                       | additional arguments for ipmi_exporter  |
 | ipmi_exporter_config             | `{}`                       | YAML with custom ipmi-exporter config   |
 
 ### Usage with custom config
