@@ -1,0 +1,7 @@
+ipmi_exporter_user: ipmi_exporter
+ipmi_exporter_group: ipmi_exporter
+ipmi_exporter_web_listen_address: ":9290"
+ipmi_exporter_use_sudoers: false
+ipmi_exporter_version: 1.6.1
+ipmi_exporter_cli_flags: {}
+ipmi_exporter_config: {}

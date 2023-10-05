@@ -1,0 +1,88 @@
+- name: install freeipmi
+  package:
+    name: freeipmi
+    state: present
+
+- name: sudoers support
+  when: ipmi_exporter_use_sudoers
+  block:
+    - name: install sudo
+      package:
+        name: sudo
+        state: present
+    - name: create sudoers config
+      template:
+        src: ipmi-exporter.sudoers.j2
+        dest: /etc/sudoers.d/ipmi-exporter
+        owner: root
+        group: root
+        mode: 0400
+
+- name: create ipmi_exporter system group
+  group:
+    name: "{{ ipmi_exporter_user }}"
+    system: true
+    state: present
+
+- name: create ipmi_exporter system user
+  user:
+    name: "{{ ipmi_exporter_group }}"
+    system: true
+    shell: "/usr/sbin/nologin"
+    group: "{{ ipmi_exporter_user }}"
+    createhome: false
+
+- name: "Download ipmi_exporter files"
+  become: false
+  get_url:
+    url: "https://github.com/prometheus-community/ipmi_exporter/releases/download/v{{ ipmi_exporter_version }}/ipmi_exporter-{{ ipmi_exporter_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/"
+  delegate_to: localhost
+
+- name: "Create temporary directory"
+  become: false
+  file:
+    path: /tmp/ipmi_exporter-{{ ipmi_exporter_version }}.linux-amd64
+    state: directory
+  delegate_to: localhost
+
+- name: "Unarchive ipmi_exporter files"
+  become: false
+  unarchive:
+    src: "/tmp/ipmi_exporter-{{ ipmi_exporter_version }}.linux-amd64.tar.gz"
+    remote_src: yes
+    dest: "/tmp/ipmi_exporter-{{ ipmi_exporter_version }}.linux-amd64"
+    creates: "/tmp/ipmi_exporter_{{ipmi_exporter_version}}_linux_amd64/ipmi_exporter"
+  delegate_to: localhost
+  check_mode: false
+
+- name: propagate ipmi_exporter binary
+  copy:
+    src: "/tmp/ipmi_exporter-{{ ipmi_exporter_version }}.linux-amd64/ipmi_exporter-{{ ipmi_exporter_version }}.linux-amd64/ipmi_exporter"
+    dest: "/usr/local/bin/ipmi_exporter"
+    mode: 0755
+    owner: "{{ ipmi_exporter_user }}"
+    group: "{{ ipmi_exporter_user }}"
+  notify:
+    - restart ipmi exporter
+
+- name: create systemd service unit
+  template:
+    src: ipmi-exporter.service.j2
+    dest: /etc/systemd/system/ipmi-exporter.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart ipmi exporter
+
+- name: configure ipmi exporter
+  template:
+    src: ipmi-exporter.yml.j2
+    dest: /etc/ipmi_exporter.yml
+    owner: "{{ ipmi_exporter_user }}"
+    group: "{{ ipmi_exporter_user }}"
+    mode: 0644
+  notify:
+    - restart ipmi exporter
+

@@ -1,0 +1,7 @@
+- name: restart ipmi exporter
+  systemd:
+    name: ipmi-exporter
+    enabled: true
+    masked: false
+    state: restarted
+    daemon_reload: true

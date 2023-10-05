@@ -1,0 +1,29 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description=IPMI exporter
+After=network-online.target
+StartLimitInterval=0
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+PIDFile=/var/run/ipmi_exporter.pid
+User={{ ipmi_exporter_user }}
+Group={{ ipmi_exporter_user }}
+PermissionsStartOnly=true
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/usr/local/bin/ipmi_exporter \
+  --config.file="/etc/ipmi_exporter.yml" \
+  {% for flag, flag_value in ipmi_exporter_cli_flags.items() -%}
+  --{{ flag }}={{ flag_value }} \
+  {% endfor -%}
+  --web.listen-address="{{ ipmi_exporter_web_listen_address }}"
+
+SyslogIdentifier=ipmi_exporter
+KillMode=process
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
